@@ -1,15 +1,18 @@
 namespace booleancoercion.SpotifyShuffler;
 
+using booleancoercion.SpotifyShuffler.Spotify;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 public class SpotifyShufflerBackgroundService : IHostedService
 {
     private readonly ILogger _logger;
+    private readonly Shuffler _shuffler;
 
-    public SpotifyShufflerBackgroundService(ILoggerFactory loggerFactory)
+    public SpotifyShufflerBackgroundService(Shuffler shuffler, ILogger<SpotifyShufflerBackgroundService> logger)
     {
-        _logger = loggerFactory.CreateLogger(nameof(SpotifyShufflerBackgroundService));
+        _logger = logger;
+        _shuffler = shuffler;
     }
 
     public Task StartAsync(CancellationToken cancellationToken)

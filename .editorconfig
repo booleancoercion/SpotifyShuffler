@@ -13,3 +13,15 @@ insert_final_newline = true
 
 [*.csproj]
 indent_size = 2
+
+[*.cs]
+dotnet_separate_import_directive_groups = false
+dotnet_sort_system_directives_first = false
+
+csharp_using_directive_placement = inside_namespace:warning
+
+csharp_style_namespace_declarations = file_scoped:warning
+csharp_style_prefer_primary_constructors = false
+
+# CA2254: Template should be a static expression
+dotnet_diagnostic.CA2254.severity = none
