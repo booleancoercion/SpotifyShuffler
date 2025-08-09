@@ -18,6 +18,9 @@ public class SpotifyShufflerBackgroundService : IHostedService
     public Task StartAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Service start!");
+
+        Task.Run(() => _shuffler.PerformShuffle("playlistId"), cancellationToken);
+
         return Task.CompletedTask;
     }
 

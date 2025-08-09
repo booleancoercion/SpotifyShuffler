@@ -9,7 +9,7 @@ public class ApiWrapper : IApiWrapper
     private readonly ILogger _logger;
     private readonly ApiConfiguration _configuration;
 
-    public ApiWrapper(ApiConfiguration configuration, ILogger<ApiWrapper> logger)
+    public ApiWrapper(ILogger<ApiWrapper> logger, ApiConfiguration configuration)
     {
         _logger = logger;
         _configuration = configuration;
