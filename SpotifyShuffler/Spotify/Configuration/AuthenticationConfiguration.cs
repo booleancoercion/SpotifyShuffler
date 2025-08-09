@@ -1,4 +1,4 @@
-namespace booleancoercion.SpotifyShuffler.Spotify;
+namespace booleancoercion.SpotifyShuffler.Spotify.Configuration;
 
 public class AuthenticationConfiguration
 {

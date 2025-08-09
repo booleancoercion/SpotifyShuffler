@@ -1,8 +1,9 @@
-namespace booleancoercion.SpotifyShuffler.Spotify;
+namespace booleancoercion.SpotifyShuffler.Spotify.Concrete;
 
+using booleancoercion.SpotifyShuffler.Spotify.Abstract;
 using Microsoft.Extensions.Logging;
 
-public class Shuffler
+public class Shuffler : IShuffler
 {
     private readonly ILogger _logger;
 
