@@ -25,7 +25,7 @@ public class AuthenticationProviderTests
         };
         Mock<ICsrfStore> csrfStore = new();
         csrfStore.Setup(x => x.Generate()).Returns(state);
-        AuthenticationProvider provider = new(Mock.Of<ILogger<AuthenticationProvider>>(), config, Mock.Of<IApiWrapper>(), csrfStore.Object);
+        AuthenticationProvider provider = new(Mock.Of<ILogger<AuthenticationProvider>>(), config, Mock.Of<IApiWrapper>(), csrfStore.Object, Mock.Of<IUserStore>());
 
         string uri = provider.GetUserAuthorizationUri(scope, showDialog);
 

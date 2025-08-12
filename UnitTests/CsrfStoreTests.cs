@@ -1,7 +1,7 @@
 namespace UnitTests;
 
-using booleancoercion.SpotifyShuffler.Spotify.Abstract;
 using booleancoercion.SpotifyShuffler.Spotify.Concrete;
+using booleancoercion.SpotifyShuffler.Util;
 using FluentAssertions;
 using Moq;
 

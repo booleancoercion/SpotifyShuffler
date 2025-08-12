@@ -4,9 +4,9 @@ using booleancoercion.SpotifyShuffler.Spotify.Concrete;
 
 public interface IUserStore
 {
-    Task InitializeAsync();
+    Task InitializeAsync(CancellationToken cancellationToken = default);
     void UpdateUser(User user);
     bool RemoveUser(string userId);
     IEnumerable<User> GetAllUsers();
-    Task PersistAsync();
+    Task PersistAsync(CancellationToken cancellationToken = default);
 }
