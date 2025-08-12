@@ -25,6 +25,8 @@ public static class Program
     {
         services.AddSingleton<ICsrfStore, CsrfStore>();
 
+        services.AddSingleton<IUserStore, UserStore>();
+
         services.AddSingletonConfiguration<ApiConfiguration>(configuration);
         services.AddSingleton<IApiWrapper, ApiWrapper>();
 

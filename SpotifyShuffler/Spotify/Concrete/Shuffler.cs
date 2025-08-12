@@ -14,7 +14,7 @@ public class Shuffler : IShuffler
         _authenticationProvider = authenticationProvider;
     }
 
-    public async Task PerformShuffle(string playlistId)
+    public async Task PerformShuffleAsync(string playlistId)
     {
         _logger.LogInformation($"Shuffling playlist with ID {playlistId}");
     }

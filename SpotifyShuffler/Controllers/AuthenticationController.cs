@@ -1,6 +1,7 @@
 namespace booleancoercion.SpotifyShuffler.Controllers;
 
 using booleancoercion.SpotifyShuffler.Spotify.Abstract;
+using booleancoercion.SpotifyShuffler.Util;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -25,8 +26,17 @@ public class AuthenticationController : ControllerBase
 
     [HttpGet]
     [Route("/callback")]
-    public IActionResult OAuthCallback()
+    public async Task<IActionResult> OAuthCallback(
+        [FromQuery] string? code,
+        [FromQuery] string? error,
+        [FromQuery] string state,
+        CancellationToken cancellationToken)
     {
-        return Ok();
+        if (code is not null && await _authenticationProvider.TryRegisterUserAsync(new TraceId(), code, state, cancellationToken))
+        {
+            return Ok();
+        }
+
+        return BadRequest();
     }
 }

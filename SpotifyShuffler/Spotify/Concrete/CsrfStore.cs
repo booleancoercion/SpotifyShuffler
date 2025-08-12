@@ -1,6 +1,7 @@
 namespace booleancoercion.SpotifyShuffler.Spotify.Concrete;
 
 using booleancoercion.SpotifyShuffler.Spotify.Abstract;
+using booleancoercion.SpotifyShuffler.Util;
 using System.Collections.Concurrent;
 using System.Security.Cryptography;
 
@@ -9,7 +10,7 @@ public class CsrfStore : ICsrfStore
     private readonly ConcurrentDictionary<string, DateTime> _inner = [];
     private readonly ITimeProvider _timeProvider;
 
-    public CsrfStore(ITimeProvider? timeProvider)
+    public CsrfStore(ITimeProvider? timeProvider = null)
     {
         _timeProvider = timeProvider ?? new TimeProvider();
     }

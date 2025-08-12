@@ -1,4 +1,4 @@
-namespace booleancoercion.SpotifyShuffler.Spotify.Abstract;
+namespace booleancoercion.SpotifyShuffler.Util;
 
 public interface ITimeProvider
 {
