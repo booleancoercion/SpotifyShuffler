@@ -1,4 +1,4 @@
-namespace booleancoercion.SpotifyShuffler;
+namespace booleancoercion.SpotifyShuffler.Util;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

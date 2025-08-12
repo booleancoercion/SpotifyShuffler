@@ -4,6 +4,7 @@ using booleancoercion.SpotifyShuffler.Spotify;
 using booleancoercion.SpotifyShuffler.Spotify.Abstract;
 using booleancoercion.SpotifyShuffler.Spotify.Concrete;
 using booleancoercion.SpotifyShuffler.Spotify.Configuration;
+using booleancoercion.SpotifyShuffler.Util;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
