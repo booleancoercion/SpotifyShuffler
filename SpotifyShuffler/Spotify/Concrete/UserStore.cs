@@ -13,7 +13,8 @@ public class UserStore : IUserStore
     private readonly ILogger _logger;
     private readonly UserStoreConfiguration _configuration;
     private readonly SemaphoreSlim _persistSemaphore = new(1, 1);
-    private ConcurrentDictionary<string, User> _users = [];
+    private ConcurrentDictionary<string, AppUser> _users = [];
+    private bool isDisposed = false;
 
     public UserStore(ILogger<UserStore> logger, UserStoreConfiguration configuration)
     {
@@ -21,7 +22,7 @@ public class UserStore : IUserStore
         _configuration = configuration;
     }
 
-    public IEnumerable<User> GetAllUsers()
+    public IEnumerable<AppUser> GetAllUsers()
     {
         return _users.Values;
     }
@@ -45,20 +46,20 @@ public class UserStore : IUserStore
             }
 
             using FileStream file = new(_configuration.StorePath, FileMode.Open);
-            User[]? store = await JsonSerializer.DeserializeAsync<User[]>(file, cancellationToken: cancellationToken);
+            AppUser[]? store = await JsonSerializer.DeserializeAsync<AppUser[]>(file, cancellationToken: cancellationToken);
 
             if (store is null)
             {
-                throw new Exception($"Could not deserialize file contents to {typeof(User[]).FullName}.");
+                throw new Exception($"Could not deserialize file contents to {typeof(AppUser[]).FullName}.");
             }
 
-            Dictionary<string, User> values = [];
-            List<string> duplicates = [];
-            foreach (User user in store)
+            Dictionary<string, AppUser> values = [];
+            List<AppUser> duplicates = [];
+            foreach (AppUser user in store)
             {
                 if (!values.TryAdd(user.Id, user))
                 {
-                    duplicates.Add(user.Id);
+                    duplicates.Add(user);
                 }
             }
 
@@ -67,7 +68,7 @@ public class UserStore : IUserStore
                 throw new Exception($"Found duplicate entries for users: {string.Join(", ", duplicates)}");
             }
 
-            _users = new ConcurrentDictionary<string, User>(values);
+            _users = new ConcurrentDictionary<string, AppUser>(values);
             _logger.LogInformation($"{nameof(InitializeAsync)}: {nameof(UserStore)} initialized successfully. Loaded {values.Count} entries.");
         }
         catch (Exception ex)
@@ -89,7 +90,7 @@ public class UserStore : IUserStore
         await _persistSemaphore.WaitAsync(cancellationToken);
         try
         {
-            List<User> userList = _users.Values.ToList();
+            List<AppUser> userList = _users.Values.ToList();
             userList.Sort((u1, u2) => string.Compare(u1.Id, u2.Id));
 
             using FileStream file = new(_configuration.StorePath, FileMode.Create);
@@ -109,11 +110,21 @@ public class UserStore : IUserStore
 
     public bool RemoveUser(string userId)
     {
-        return _users.Remove(userId, out User? _);
+        return _users.Remove(userId, out AppUser? _);
     }
 
-    public void UpdateUser(User user)
+    public void UpdateUser(AppUser user)
     {
         _users[user.Id] = user;
+    }
+
+    public AppUser GetUser(string userId)
+    {
+        if (!_users.TryGetValue(userId, out AppUser? output))
+        {
+            throw new Exception($"There is no user with ID {userId}");
+        }
+
+        return output;
     }
 }

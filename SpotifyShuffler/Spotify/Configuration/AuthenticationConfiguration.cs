@@ -6,4 +6,5 @@ public class AuthenticationConfiguration
     public required string ClientSecret { get; init; }
     public required string RedirectUri { get; init; }
     public required string AuthorizeUri { get; init; }
+    public required string Scopes { get; init; }
 }

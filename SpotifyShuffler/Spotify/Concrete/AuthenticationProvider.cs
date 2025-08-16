@@ -2,6 +2,7 @@ namespace booleancoercion.SpotifyShuffler.Spotify.Concrete;
 
 using booleancoercion.SpotifyShuffler.Spotify.Abstract;
 using booleancoercion.SpotifyShuffler.Spotify.Configuration;
+using booleancoercion.SpotifyShuffler.Spotify.Entities;
 using booleancoercion.SpotifyShuffler.Util;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.Logging;
@@ -31,7 +32,7 @@ public class AuthenticationProvider : IAuthenticationProvider
         _timeProvider = timeProvider ?? new TimeProvider();
     }
 
-    public string GetUserAuthorizationUri(string? scope = null, bool showDialog = false)
+    public string GetUserAuthorizationUri(bool showDialog = false)
     {
         QueryBuilder qb = new()
         {
@@ -39,18 +40,14 @@ public class AuthenticationProvider : IAuthenticationProvider
             {"response_type", "code"},
             {"redirect_uri", _configuration.RedirectUri},
             {"show_dialog", showDialog.ToString().ToLower()},
-            {"state", _csrfStore.Generate()}
+            {"state", _csrfStore.Generate()},
+            {"scope", _configuration.Scopes},
         };
-
-        if (!string.IsNullOrEmpty(scope))
-        {
-            qb.Add("scope", scope);
-        }
 
         return $"{_configuration.AuthorizeUri}{qb}";
     }
 
-    public async Task<bool> TryRegisterUserAsync(TraceId traceId, string code, string csrfToken, CancellationToken cancellationToken)
+    public async Task<bool> TryRegisterUserAsync(TraceId traceId, string code, string csrfToken, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation(traceId, "Registering user");
         if (!_csrfStore.Consume(csrfToken))
@@ -63,7 +60,7 @@ public class AuthenticationProvider : IAuthenticationProvider
         {
             _logger.LogInformation(traceId, "CSRF token is valid, proceeding");
             DateTime now = _timeProvider.Now;
-            (string token, TimeSpan expiresIn, string refreshToken) = await _apiWrapper.GetToken(
+            IApiWrapper.TokenObject tokenObject = await _apiWrapper.GetTokenAsync(
                 traceId,
                 code,
                 _configuration.RedirectUri,
@@ -72,19 +69,19 @@ public class AuthenticationProvider : IAuthenticationProvider
                 cancellationToken);
 
             _logger.LogInformation(traceId, "Successfully retrieved token, getting user details");
-            (string id, string? displayName) = await _apiWrapper.GetCurrentUserProfile(traceId, token, cancellationToken);
+            User user = await _apiWrapper.GetCurrentUserProfileAsync(traceId, tokenObject.Token, cancellationToken);
 
-            _logger.LogInformation(traceId, $"Received profile details for {id}" + ((displayName is not null) ? $" ({displayName})" : ""));
-
-            User user = new()
+            AppUser appUser = new()
             {
-                Id = id,
-                CachedName = displayName,
-                Token = token,
-                TokenExpiry = now + expiresIn,
-                RefreshToken = refreshToken,
+                Id = user.Id,
+                CachedName = user.DisplayName,
+                Token = tokenObject.Token,
+                TokenExpiry = now + tokenObject.ExpiresIn,
+                RefreshToken = tokenObject.RefreshToken!,
+                Scopes = _configuration.Scopes,
             };
-            _userStore.UpdateUser(user);
+            _userStore.UpdateUser(appUser);
+            _logger.LogInformation(traceId, $"Received profile details for {appUser}");
 
             return true;
         }
@@ -92,6 +89,50 @@ public class AuthenticationProvider : IAuthenticationProvider
         {
             _logger.LogError(ex, traceId, "Error when registering user");
             return false;
+        }
+    }
+
+    public async Task<string> GetTokenAsync(TraceId traceId, string userId, TimeSpan? refreshIfExpiresIn = null, CancellationToken cancellationToken = default)
+    {
+        refreshIfExpiresIn ??= TimeSpan.FromMinutes(1);
+
+        AppUser user = _userStore.GetUser(userId);
+        if (user.Scopes != _configuration.Scopes)
+        {
+            _userStore.RemoveUser(userId);
+            throw new Exception($"Required scope configuration changed since token for user {user} was acquired!"
+            + " Cannot use stored token, and refreshing will not help. User removed from store.");
+        }
+        else if (user.TokenExpiry - _timeProvider.Now < refreshIfExpiresIn)
+        {
+            _logger.LogInformation(traceId, $"Expiry threshold reached, refreshing token for user {user}");
+        }
+        else
+        {
+            return user.Token;
+        }
+
+        try
+        {
+            DateTime now = _timeProvider.Now;
+            IApiWrapper.TokenObject tokenObject = await _apiWrapper.RefreshTokenAsync(
+                traceId,
+                user.RefreshToken,
+                _configuration.ClientId,
+                _configuration.ClientSecret,
+                cancellationToken);
+
+            _logger.LogInformation(traceId, $"Successfully retrieved new token for {user}");
+            user.Token = tokenObject.Token;
+            user.TokenExpiry = now + tokenObject.ExpiresIn;
+            user.RefreshToken = tokenObject.RefreshToken ?? user.RefreshToken;
+
+            return tokenObject.Token;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, traceId, $"Exception while trying to retrieve new token for user {user}");
+            throw;
         }
     }
 }
