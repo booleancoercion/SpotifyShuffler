@@ -41,8 +41,12 @@ public class AuthenticationProvider : IAuthenticationProvider
             {"redirect_uri", _configuration.RedirectUri},
             {"show_dialog", showDialog.ToString().ToLower()},
             {"state", _csrfStore.Generate()},
-            {"scope", _configuration.Scopes},
         };
+
+        if (!string.IsNullOrWhiteSpace(_configuration.Scopes))
+        {
+            qb.Add("scope", _configuration.Scopes);
+        }
 
         return $"{_configuration.AuthorizeUri}{qb}";
     }
