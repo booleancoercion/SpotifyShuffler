@@ -14,7 +14,6 @@ public class UserStore : IUserStore
     private readonly UserStoreConfiguration _configuration;
     private readonly SemaphoreSlim _persistSemaphore = new(1, 1);
     private ConcurrentDictionary<string, AppUser> _users = [];
-    private bool isDisposed = false;
 
     public UserStore(ILogger<UserStore> logger, UserStoreConfiguration configuration)
     {

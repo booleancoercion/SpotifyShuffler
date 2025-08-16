@@ -12,14 +12,15 @@ public class AuthenticationProviderTests
 {
     [DataTestMethod]
     [DataRow("abc123", "https://example.com/callback", true, "456def", "some_scope", "https://accounts.spotify.com/authorize?client_id=abc123&response_type=code&redirect_uri=https%3A%2F%2Fexample.com%2Fcallback&show_dialog=true&state=456def&scope=some_scope")]
-    [DataRow("xyz789", "http://127.0.0.1:8888/callback", false, "1122333bgda", null, "https://accounts.spotify.com/authorize?client_id=xyz789&response_type=code&redirect_uri=http%3A%2F%2F127.0.0.1%3A8888%2Fcallback&show_dialog=false&state=1122333bgda")]
-    public void TestGetUserAuthorizationUri(string clientId, string redirectUri, bool showDialog, string state, string? scope, string expectedUri)
+    [DataRow("xyz789", "http://127.0.0.1:8888/callback", false, "1122333bgda", "", "https://accounts.spotify.com/authorize?client_id=xyz789&response_type=code&redirect_uri=http%3A%2F%2F127.0.0.1%3A8888%2Fcallback&show_dialog=false&state=1122333bgda")]
+    public void TestGetUserAuthorizationUri(string clientId, string redirectUri, bool showDialog, string state, string scope, string expectedUri)
     {
         AuthenticationConfiguration config = new()
         {
             ClientId = clientId,
             RedirectUri = redirectUri,
             AuthorizeUri = "https://accounts.spotify.com/authorize",
+            Scopes = scope,
 
             ClientSecret = "irrelevant",
         };
@@ -27,7 +28,7 @@ public class AuthenticationProviderTests
         csrfStore.Setup(x => x.Generate()).Returns(state);
         AuthenticationProvider provider = new(Mock.Of<ILogger<AuthenticationProvider>>(), config, Mock.Of<IApiWrapper>(), csrfStore.Object, Mock.Of<IUserStore>());
 
-        string uri = provider.GetUserAuthorizationUri(scope, showDialog);
+        string uri = provider.GetUserAuthorizationUri(showDialog);
 
         uri.Should().Be(expectedUri);
     }
